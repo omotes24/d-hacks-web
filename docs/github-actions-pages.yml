@@ -1,0 +1,67 @@
+# Example: builds this prototype and publishes it to GitHub Pages on every push to main.
+# To use it, copy this file to .github/workflows/ and set the Pages source to GitHub Actions.
+# The official site (nkzwlab/dhacks-site) deploys to the lab server with its own workflow;
+# that workflow is deliberately not part of this repository.
+
+name: Deploy prototype to GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The research list comes from the lab server's API, which does not answer
+      # cross-origin requests, so the prototype reads a copy saved at build time.
+      - name: Save the research list
+        run: |
+          curl -fsS --retry 3 https://d-hacks.jn.sfc.keio.ac.jp/api/research-items -o public/research-items.json \
+            || echo '{"success":false,"data":[]}' > public/research-items.json
+
+      - name: Build
+        run: npm run build
+        env:
+          BASE_PATH: /d-hacks-web/
+          VITE_PROTOTYPE: '1'
+          VITE_API_ORIGIN: https://d-hacks.jn.sfc.keio.ac.jp
+          VITE_RESEARCH_JSON: research-items.json
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
