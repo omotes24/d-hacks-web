@@ -1,0 +1,1 @@
+.members__list{grid-template-columns:repeat(auto-fill,minmax(15em,1fr));gap:0 clamp(20px,3vw,40px);display:grid}.members__list li{padding:calc(var(--u) * .5) 0;border-bottom:1px solid var(--rule);justify-content:space-between;align-items:baseline;gap:16px;display:flex}.members__research{color:var(--dim);text-align:right}.members__others{color:var(--dim)}

@@ -1,0 +1,1 @@
+.publications__list li{padding:calc(var(--u) * .5) 0 calc(var(--u) * .5) 2em;text-indent:-2em;border-bottom:1px solid var(--rule);overflow-wrap:anywhere}
